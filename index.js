@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const { App } = require("@slack/bolt");
+const { getResponse } = require("./src/trig");
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -8,14 +9,36 @@ const app = new App({
   socketMode: true
 });
 
-app.command("/archpheus-ping", async ({ command, ack, respond }) => {
+app.command("/archpheus-init", async ({ ack, respond }) => {
   const start = Date.now();
+
   await ack();
+
   const latency = Date.now() - start;
-  await respond({ text: `I use arch btw\nLatency: ${latency}ms` });
+
+  await respond({
+    text: `I use arch btw\nLatency: ${latency}ms`
+  });
+});
+
+app.message(async ({ message, say }) => {
+  console.log("MESSAGE EVENT:", message);
+
+  if (message.subtype) return;
+  if (!message.text) return;
+
+  const response = getResponse(message.text);
+
+  console.log("TEXT:", message.text);
+  console.log("RESPONSE:", response);
+
+  if (response) {
+    await say(response);
+  }
 });
 
 (async () => {
   await app.start();
-  console.log("bot is running!");
+
+  console.log(":Archpheus is back!");
 })();
